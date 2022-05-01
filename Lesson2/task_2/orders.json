@@ -1,0 +1,32 @@
+{
+    "orders": [
+        {
+            "item": "TV",
+            "quantity": "5",
+            "price": "200000",
+            "buyer": "Grisha Julikov",
+            "date": "19.05.2021"
+        },
+        {
+            "item": "Sofa",
+            "quantity": "1",
+            "price": "35000",
+            "buyer": "Grisha Fedotov",
+            "date": "27.05.2021"
+        },
+        {
+            "item": "wardrobe",
+            "quantity": "3",
+            "price": "144000",
+            "buyer": "Grisha Sedoy",
+            "date": "30.12.2021"
+        },
+        {
+            "item": "mirror",
+            "quantity": "2",
+            "price": "16000",
+            "buyer": "Grisha Glinkin",
+            "date": "02.07.2011"
+        }
+    ]
+}
