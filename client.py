@@ -3,6 +3,7 @@ import json
 import socket
 import time
 import logging
+from decorators import log
 
 from Projects_data.functions import get_message, send_message
 from Projects_data.variables import ACTION, PRESENCE, TIME, USER, ACCOUNT_NAME, RESPONSE, ERROR, DEFAULT_IP, \
@@ -14,6 +15,7 @@ LOGGER = logging.getLogger('client')
 
 
 #  Функция генерации присутствия клиента
+@log
 def presence_of_client(account_name='Guest'):
     generation_presence = {
         ACTION: PRESENCE,
@@ -27,6 +29,7 @@ def presence_of_client(account_name='Guest'):
 
 
 # Функция разбора ответа от сервера
+@log
 def serv_response(message):
     LOGGER.info(f'От сервера получен ответ: {RESPONSE}')
     if RESPONSE in message:

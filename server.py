@@ -4,6 +4,7 @@ import json
 import logging
 import pr_logs.configs.server_log_config
 
+from  decorators import log
 from Projects_data.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_QUEUE_CONNECTIONS, PRESENCE, \
     TIME, USER, ERROR, DEFAULT_PORT
 from Projects_data.functions import get_message, send_message
@@ -13,6 +14,7 @@ LOGGER = logging.getLogger('server')
 
 
 # Функция проверяющая сообщения клиента
+@log
 def check_client_message(message):
     LOGGER.info(f'Информация о сообщении: {message}, полученном от клиента')
     if ACTION in message and message[ACTION] == PRESENCE and TIME in message \
