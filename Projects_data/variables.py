@@ -1,5 +1,7 @@
 """Переменные-константы"""
 
+import logging
+
 # Номер порта по умолчанию
 DEFAULT_PORT = 9999
 
@@ -25,3 +27,6 @@ RESPONSE = 'response'
 # Остальные ключи для протокола JIM
 PRESENCE = 'presence'
 ERROR = 'error'
+
+# Уровень логгирования
+LOGGING_LEVEL = logging.DEBUG
