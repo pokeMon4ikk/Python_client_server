@@ -23,13 +23,15 @@ TIME = 'time'
 USER = 'user'
 ACCOUNT_NAME = 'account_name'
 RESPONSE = 'response'
-SENDER = 'sender'
+SENDER = 'from'
+DESTINATION = 'to'
 
 # Остальные ключи для протокола JIM
 PRESENCE = 'presence'
 ERROR = 'error'
 MESSAGE = 'message'
 MESSAGE_TEXT = 'mess_text'
+EXIT = 'exit'
 
 # Уровень логгирования
 LOGGING_LEVEL = logging.DEBUG

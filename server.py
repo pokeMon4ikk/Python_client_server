@@ -9,7 +9,7 @@ import pr_logs.configs.server_log_config
 
 from decorators import log
 from Projects_data.variables import ACTION, ACCOUNT_NAME, RESPONSE, MAX_QUEUE_CONNECTIONS, PRESENCE, \
-    TIME, USER, ERROR, DEFAULT_PORT, SENDER, MESSAGE, MESSAGE_TEXT, DEFAULT_IP
+    TIME, USER, ERROR, DEFAULT_PORT, SENDER, MESSAGE, MESSAGE_TEXT, DEFAULT_IP, EXIT, DESTINATION
 from Projects_data.functions import get_message, send_message
 
 # Вызов логгера серверной части
@@ -17,22 +17,46 @@ LOGGER = logging.getLogger('server')
 
 
 @log
-def check_client_message(message, messages_list, client):
+def check_client_message(message, messages_list, client, clients, names):
     """Функция проверяющая сообщения клиента"""
     LOGGER.info(f'Информация о сообщении: {message}, полученном от клиента')
-    if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message \
-            and message[USER][ACCOUNT_NAME] == 'Guest':
-        send_message(client, {RESPONSE: 200})
+    if ACTION in message and message[ACTION] == PRESENCE and TIME in message and USER in message:
+        if message[USER][ACCOUNT_NAME] not in names.keys():
+            names[message[USER][ACCOUNT_NAME]] = client
+            send_message(client, {RESPONSE: 200})
+        else:
+            response = {RESPONSE: 400, ERROR: 'Имя пользователя уже занято.'}
+            send_message(client, response)
+            clients.remove(client)
+            client.close()
         return
-    elif ACTION in message and message[ACTION] == MESSAGE and TIME in message and MESSAGE_TEXT in message:
-        messages_list.append((message[ACCOUNT_NAME], message[MESSAGE_TEXT]))
+    elif ACTION in message and message[ACTION] == MESSAGE and DESTINATION in message and TIME in message and \
+            SENDER in message and MESSAGE_TEXT in message:
+        messages_list.append(message)
+        return
+    elif ACTION in message and message[ACTION] == EXIT and ACCOUNT_NAME in message:
+        clients.remove(names[message[ACCOUNT_NAME]])
+        names[message[ACCOUNT_NAME]].close()
+        del names[message[ACCOUNT_NAME]]
         return
     else:
-        send_message(client, {
-            RESPONSE: 400,
-            ERROR: 'Bad Request'
-        })
+        response = {RESPONSE: 400, ERROR: 'Запрос некорректен.'}
+        send_message(client, response)
         return
+
+
+@log
+def process_message(message, names, listen_socks):
+    if message[DESTINATION] in names and names[message[DESTINATION]] in listen_socks:
+        send_message(names[message[DESTINATION]], message)
+        LOGGER.info(f'Отправлено сообщение пользователю {message[DESTINATION]} '
+                    f'от пользователя {message[SENDER]}.')
+    elif message[DESTINATION] in names and names[message[DESTINATION]] not in listen_socks:
+        raise ConnectionError
+    else:
+        LOGGER.error(
+            f'Пользователь {message[DESTINATION]} не зарегистрирован на сервере, '
+            f'отправка сообщения невозможна.')
 
 
 @log
@@ -59,20 +83,21 @@ def main_func():
         f'Если адрес не указан, принимаются соединения с любых адресов.')
 
     # Готовим сокет
-    transport = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    transport.bind((listen_address, listen_port))
-    transport.settimeout(0.5)
+    sock_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock_.bind((listen_address, listen_port))
+    sock_.settimeout(0.5)
 
     clients = []
     messages = []
 
-    transport.listen(MAX_QUEUE_CONNECTIONS)
+    names = dict()
 
     while True:
         try:
-            client, client_address = transport.accept()
-        except OSError:
+            client, client_address = sock_.accept()
+        except Exception:
             pass
+
         else:
             LOGGER.info(f'Установлено соедение с ПК {client_address}')
             clients.append(client)
@@ -90,26 +115,20 @@ def main_func():
         if recv_data_lst:
             for client_with_message in recv_data_lst:
                 try:
-                    check_client_message(get_message(client_with_message), messages, client_with_message)
-                except:
+                    check_client_message(get_message(client_with_message), messages, client_with_message, clients, names)
+                except Exception:
                     LOGGER.info(f'Клиент {client_with_message.getpeername()} '
                                 f'отключился от сервера.')
                     clients.remove(client_with_message)
 
-        if messages and send_data_lst:
-            message = {
-                ACTION: MESSAGE,
-                SENDER: messages[0][0],
-                TIME: time.time(),
-                MESSAGE_TEXT: messages[0][1]
-            }
-            del messages[0]
-            for waiting_client in send_data_lst:
-                try:
-                    send_message(waiting_client, message)
-                except:
-                    LOGGER.info(f'Клиент {waiting_client.getpeername()} отключился от сервера.')
-                    clients.remove(waiting_client)
+        for i in messages:
+            try:
+                process_message(i, names, send_data_lst)
+            except Exception:
+                LOGGER.info(f'Связь с клиентом с именем {i[DESTINATION]} была потеряна')
+                clients.remove(names[i[DESTINATION]])
+                del names[i[DESTINATION]]
+        messages.clear()
 
 
 if __name__ == '__main__':
