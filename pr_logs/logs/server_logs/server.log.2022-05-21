@@ -1,5 +1,0 @@
-2022-05-21 17:11:35,506 INFO server.py Портом подключения выбран дефолтный порт: 9999
-2022-05-21 17:11:35,507 WARNING server.py Адрес подключения не указан!
-2022-05-21 17:11:39,275 INFO server.py Получено сообщение: {'action': 'presence', 'time': 'Sat May 21 17:11:39 2022', 'user': {'account_name': 'Guest'}}
-2022-05-21 17:11:39,275 INFO server.py Информация о сообщении: {'action': 'presence', 'time': 'Sat May 21 17:11:39 2022', 'user': {'account_name': 'Guest'}}, полученном от клиента
-2022-05-21 17:11:39,275 INFO server.py Сформирован ответ: {'response': 200}
